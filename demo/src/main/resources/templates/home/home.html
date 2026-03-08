@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<body>
+<div layout:fragment="content">
+
+    <!-- Banner Section -->
+    <div class="banner-section mb-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="banner-main text-white p-5 rounded" style="background: linear-gradient(135deg, #00b4d8, #0077b6); min-height: 200px;">
+                    <h2 class="mb-2">CHÀO HÈ RỰC RỠ</h2>
+                    <h1 class="display-5 fw-bold">ƯU ĐÃI CỰC COOL</h1>
+                    <a href="/products" class="btn btn-warning mt-3 fw-bold">MUA NGAY</a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="banner-side text-white p-4 rounded h-100" style="background: linear-gradient(135deg, #ef476f, #f72585);">
+                    <p class="small mb-1">KHUYẾN MÃI</p>
+                    <h4>MUA ONLINE VƯỢT TRỘI</h4>
+                    <p class="small">Dịch vụ tốt nhất</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product List Section -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-box-seam"></i> Danh sách sản phẩm</h4>
+        <a href="/products/new" class="btn btn-add">
+            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+        </a>
+    </div>
+
+    <!-- Countdown Timer -->
+    <div class="d-inline-flex align-items-center bg-warning text-dark px-3 py-2 rounded mb-3">
+        <span class="me-2">Chỉ còn:</span>
+        <span class="badge bg-dark text-white me-1" id="hours">00</span>:
+        <span class="badge bg-dark text-white me-1" id="minutes">29</span>:
+        <span class="badge bg-dark text-white" id="seconds">57</span>
+    </div>
+
+    <!-- Products Table -->
+    <div class="product-table">
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th>#</th>
+                <th>Ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Mô tả</th>
+                <th>Danh mục</th>
+                <th>Giá</th>
+                <th class="text-center">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Empty State -->
+            <tr th:if="${products == null or #lists.isEmpty(products)}">
+                <td colspan="7" class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                    <p class="text-muted mt-3 mb-0">Chưa có sản phẩm nào</p>
+                    <a href="/products/new" class="btn btn-add mt-3">
+                        <i class="bi bi-plus-circle"></i> Thêm sản phẩm đầu tiên
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Product Rows -->
+            <tr th:each="product, iterStat : ${products}">
+                <td class="fw-bold" th:text="${iterStat.count}">1</td>
+                <td>
+                    <img th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
+                         th:src="${product.imageUrl}"
+                         class="product-image"
+                         alt="Ảnh sản phẩm">
+                    <img th:unless="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
+                         src="https://via.placeholder.com/80x80?text=No+Image"
+                         class="product-image"
+                         alt="No image">
+                </td>
+                <td><strong th:text="${product.name}">Tên sản phẩm</strong></td>
+                <td>
+                    <span class="text-muted" 
+                          th:text="${product.description != null and #strings.length(product.description) > 30 ? #strings.substring(product.description, 0, 30) + '...' : (product.description ?: '')}">
+                    </span>
+                </td>
+                <td>
+                    <span class="category-badge" 
+                          th:text="${product.category != null ? product.category.name : 'Chưa phân loại'}">
+                    </span>
+                </td>
+                <td>
+                    <span class="price-text" 
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                    </span>
+                </td>
+                <td class="text-center">
+                    <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-edit btn-sm me-1">
+                        <i class="bi bi-pencil-square"></i> Sửa
+                    </a>
+                    <a th:href="@{/products/delete/{id}(id=${product.id})}" class="btn btn-delete btn-sm me-1"
+                       onclick="return confirm('Bạn có chắc muốn xóa?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </a>
+                    <button class="btn btn-cart btn-sm">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <h5 class="text-primary mb-0" th:text="${products != null ? #lists.size(products) : 0}">0</h5>
+                <small class="text-muted">Tổng sản phẩm</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <h5 class="text-success mb-0" th:text="${categories != null ? #lists.size(categories) : 0}">0</h5>
+                <small class="text-muted">Danh mục</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <a href="/products" class="btn btn-add w-100">Xem tất cả sản phẩm</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script layout:fragment="scripts">
+    // Countdown Timer
+    function updateCountdown() {
+        let hours = 0;
+        let minutes = 29;
+        let seconds = 57;
+        
+        setInterval(function() {
+            seconds--;
+            if (seconds < 0) {
+                seconds = 59;
+                minutes--;
+                if (minutes < 0) {
+                    minutes = 59;
+                    hours--;
+                    if (hours < 0) {
+                        hours = 23;
+                    }
+                }
+            }
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+        }, 1000);
+    }
+    updateCountdown();
+</script>
+</body>
+</html>

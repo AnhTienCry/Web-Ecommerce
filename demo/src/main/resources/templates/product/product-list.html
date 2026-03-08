@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<body>
+<div layout:fragment="content">
+
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <h4><i class="bi bi-box-seam"></i> Danh sách sản phẩm</h4>
+        <a href="/products/new" class="btn btn-add">
+            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
+        </a>
+    </div>
+
+    <!-- Products Table -->
+    <div class="product-table">
+        <table class="table mb-0">
+            <thead>
+            <tr>
+                <th style="width: 5%">#</th>
+                <th style="width: 12%">Ảnh</th>
+                <th style="width: 20%">Tên sản phẩm</th>
+                <th style="width: 20%">Mô tả</th>
+                <th style="width: 13%">Danh mục</th>
+                <th style="width: 12%">Giá</th>
+                <th style="width: 18%" class="text-center">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Empty State -->
+            <tr th:if="${#lists.isEmpty(products)}">
+                <td colspan="7" class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
+                    <p class="text-muted mt-3 mb-0">Chưa có sản phẩm nào</p>
+                    <a href="/products/new" class="btn btn-add mt-3">
+                        <i class="bi bi-plus-circle"></i> Thêm sản phẩm đầu tiên
+                    </a>
+                </td>
+            </tr>
+
+            <!-- Product Rows -->
+            <tr th:each="product, iterStat : ${products}">
+                <td class="fw-bold" th:text="${iterStat.count}">1</td>
+                <td>
+                    <!-- Hiển thị ảnh sản phẩm -->
+                    <img th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
+                         th:src="${product.imageUrl}"
+                         class="product-image"
+                         alt="Ảnh sản phẩm">
+                    <img th:unless="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
+                         src="https://via.placeholder.com/80x80?text=No+Image"
+                         class="product-image"
+                         alt="No image">
+                </td>
+                <td>
+                    <strong th:text="${product.name}">Tên sản phẩm</strong>
+                </td>
+                <td>
+                    <span class="text-muted" 
+                          th:text="${product.description != null and #strings.length(product.description) > 40 ? #strings.substring(product.description, 0, 40) + '...' : (product.description ?: 'Không có mô tả')}">
+                        Mô tả
+                    </span>
+                </td>
+                <td>
+                    <span class="category-badge" 
+                          th:text="${product.category != null ? product.category.name : 'Chưa phân loại'}">
+                        Danh mục
+                    </span>
+                </td>
+                <td>
+                    <span class="price-text" 
+                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
+                        0 VNĐ
+                    </span>
+                </td>
+                <td class="text-center">
+                    <a th:href="@{/products/edit/{id}(id=${product.id})}" 
+                       class="btn btn-edit btn-sm me-1">
+                        <i class="bi bi-pencil-square"></i> Sửa
+                    </a>
+                    <a th:href="@{/products/delete/{id}(id=${product.id})}" 
+                       class="btn btn-delete btn-sm me-1"
+                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
+                        <i class="bi bi-trash"></i> Xóa
+                    </a>
+                    <button class="btn btn-cart btn-sm">
+                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                    </button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <h5 class="text-primary mb-0" th:text="${#lists.size(products)}">0</h5>
+                <small class="text-muted">Tổng sản phẩm</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <h5 class="text-success mb-0">5</h5>
+                <small class="text-muted">Danh mục</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="page-header text-center">
+                <h5 class="text-warning mb-0">0</h5>
+                <small class="text-muted">Đơn hàng</small>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
+                <h3 class="fw-bold mb-0">125</h3>
+                <p class="mb-0 opacity-75">Lượt Xem</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script layout:fragment="scripts">
+    // Tìm kiếm sản phẩm
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let filter = this.value.toLowerCase();
+        let rows = document.querySelectorAll('.product-row');
+        
+        rows.forEach(row => {
+            let name = row.querySelector('.fw-bold').textContent.toLowerCase();
+            if (name.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+</body>
+</html>
