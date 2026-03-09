@@ -60,6 +60,18 @@ public class Order {
     @Column(name = "discount_amount")
     private double discountAmount = 0;
 
+    @Column(name = "shipping_fee")
+    private double shippingFee = 0;
+
+    @Column(name = "coupon_code")
+    private String couponCode;
+
+    @Column(name = "payment_method")
+    private String paymentMethod = "COD";
+
+    @Column(name = "payment_status")
+    private String paymentStatus = "PENDING";
+
     @PrePersist
     protected void onCreate() {
         if (orderDate == null) {
@@ -79,10 +91,14 @@ public class Order {
     }
 
     public double getFinalAmount() {
-        return Math.max(0, totalAmount - discountAmount);
+        return Math.max(0, totalAmount - discountAmount + shippingFee);
     }
 
     public String getFinalAmountFormatted() {
         return java.text.NumberFormat.getInstance().format(getFinalAmount());
+    }
+
+    public String getShippingFeeFormatted() {
+        return java.text.NumberFormat.getInstance().format(shippingFee);
     }
 }

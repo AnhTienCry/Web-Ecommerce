@@ -26,6 +26,8 @@ public class CartController {
         model.addAttribute("totalFormatted", cartService.getTotalFormatted());
         model.addAttribute("itemCount", cartService.getItemCount());
         model.addAttribute("earnedPoints", pointService.calculateEarnedPoints(total));
+        model.addAttribute("shippingFee", cartService.getShippingFee());
+        model.addAttribute("shippingFeeFormatted", cartService.getShippingFeeFormatted());
         return "cart/cart";
     }
 

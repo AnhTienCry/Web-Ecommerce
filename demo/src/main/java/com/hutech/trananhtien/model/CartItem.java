@@ -14,7 +14,7 @@ public class CartItem {
     private int quantity;
 
     public double getSubtotal() {
-        return product.getPrice() * quantity;
+        return product.getEffectivePrice() * quantity;
     }
 
     public String getSubtotalDisplay() {

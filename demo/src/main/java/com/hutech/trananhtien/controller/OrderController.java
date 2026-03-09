@@ -1,9 +1,11 @@
 package com.hutech.trananhtien.controller;
 
 import com.hutech.trananhtien.model.CartItem;
+import com.hutech.trananhtien.model.Coupon;
 import com.hutech.trananhtien.model.Customer;
 import com.hutech.trananhtien.model.Order;
 import com.hutech.trananhtien.service.CartService;
+import com.hutech.trananhtien.service.CouponService;
 import com.hutech.trananhtien.service.OrderService;
 import com.hutech.trananhtien.service.PointService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class OrderController {
     private final OrderService orderService;
     private final CartService cartService;
     private final PointService pointService;
+    private final CouponService couponService;
 
     @GetMapping("/checkout")
     public String checkout(@RequestParam(value = "phone", required = false) String phone, Model model) {
@@ -39,6 +42,8 @@ public class OrderController {
         model.addAttribute("total", total);
         model.addAttribute("totalFormatted", cartService.getTotalFormatted());
         model.addAttribute("earnedPoints", pointService.calculateEarnedPoints(total));
+        model.addAttribute("shippingFee", cartService.getShippingFee());
+        model.addAttribute("shippingFeeFormatted", cartService.getShippingFeeFormatted());
         model.addAttribute("order", new Order());
 
         if (phone != null && !phone.isBlank()) {
@@ -54,13 +59,14 @@ public class OrderController {
     @PostMapping("/submit")
     public String submitOrder(@ModelAttribute Order order,
             @RequestParam(value = "pointsToUse", defaultValue = "0") int pointsToUse,
+            @RequestParam(value = "couponCode", required = false) String couponCode,
             RedirectAttributes redirectAttributes) {
         List<CartItem> cartItems = cartService.getCartItems();
         if (cartItems.isEmpty()) {
             return "redirect:/cart";
         }
 
-        Order savedOrder = orderService.createOrder(order, cartItems, pointsToUse);
+        Order savedOrder = orderService.createOrder(order, cartItems, pointsToUse, couponCode);
         redirectAttributes.addAttribute("orderId", savedOrder.getId());
         return "redirect:/order/confirmation";
     }
@@ -86,6 +92,29 @@ public class OrderController {
                 customer.getAddress());
     }
 
+    @GetMapping("/api/available-coupons")
+    @ResponseBody
+    public AvailableCouponsResponse getAvailableCoupons(@RequestParam("phone") String phone) {
+        List<Coupon> personal = couponService.getValidCouponsByPhone(phone);
+        List<Coupon> publicCoupons = couponService.getPublicCoupons();
+        List<CouponDto> personalDtos = personal.stream()
+                .map(c -> new CouponDto(c.getCode(), c.getDiscountFormatted(), c.getDiscountValue(),
+                        c.getExpiresAt().toString(), "personal"))
+                .toList();
+        List<CouponDto> publicDtos = publicCoupons.stream()
+                .map(c -> new CouponDto(c.getCode(), c.getDiscountFormatted(), c.getDiscountValue(),
+                        c.getExpiresAt().toString(), "public"))
+                .toList();
+        return new AvailableCouponsResponse(personalDtos, publicDtos);
+    }
+
     public record CustomerPointsResponse(boolean found, String name, int points, String email, String address) {
+    }
+
+    public record CouponDto(String code, String discountFormatted, double discountValue, String expiresAt,
+            String type) {
+    }
+
+    public record AvailableCouponsResponse(List<CouponDto> personal, List<CouponDto> publicCoupons) {
     }
 }

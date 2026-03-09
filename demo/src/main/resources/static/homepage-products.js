@@ -58,9 +58,39 @@ async function addToCart(productId) {
 function buildPromoCard(product) {
   const badgeClass = product.badge ? product.badge.toLowerCase() : "";
   const badge = product.badge ? `<span class="badge ${badgeClass}">${product.badge}</span>` : "";
-  const oldPrice = product.oldPrice ? `<span class="card-old">${formatPrice(product.oldPrice).replace(" đ", "đ")}</span>` : "";
-  const discount = product.discountPercent ? `<span class="card-discount">-${product.discountPercent}%</span>` : "";
   const status = product.statusText || "Vừa mở bán";
+
+  // Use effectivePrice: when promo sold out, show original price
+  const displayPrice = product.promoAvailable ? product.price : product.effectivePrice;
+  const showOldPrice = product.promoAvailable && product.oldPrice;
+  const showDiscount = product.promoAvailable && product.discountPercent;
+  const oldPrice = showOldPrice ? `<span class="card-old">${formatPrice(product.oldPrice).replace(" đ", "đ")}</span>` : "";
+  const discount = showDiscount ? `<span class="card-discount">-${product.discountPercent}%</span>` : "";
+
+  // Promo remaining info
+  let promoInfo = "";
+  if (product.promoQuantity && product.promoQuantity > 0) {
+    if (product.promoAvailable) {
+      const percent = Math.round((product.promoSold / product.promoQuantity) * 100);
+      promoInfo = `
+        <div class="promo-remaining">
+          <div class="promo-bar">
+            <div class="promo-bar-fill" style="width: ${percent}%"></div>
+          </div>
+          <span class="promo-text">Đã bán ${product.promoSold || 0}/${product.promoQuantity}</span>
+        </div>`;
+    } else {
+      promoInfo = `
+        <div class="promo-remaining">
+          <div class="promo-bar">
+            <div class="promo-bar-fill" style="width: 100%"></div>
+          </div>
+          <span class="promo-text promo-sold-out">Đã bán ${product.promoSold || 0}/${product.promoQuantity} — Hết KM</span>
+        </div>`;
+    }
+  }
+
+  const btnDisabled = false;
 
   return `
     <article class="promo-card" data-id="${product.id}">
@@ -69,11 +99,12 @@ function buildPromoCard(product) {
         <img src="${product.image || FALLBACK_PRODUCT_IMAGE}" alt="${product.name}">
       </div>
       <h3 class="card-name">${product.name}</h3>
-      <div class="card-price">${formatPrice(product.price).replace(" đ", "đ")}</div>
+      <div class="card-price">${formatPrice(displayPrice).replace(" đ", "đ")}</div>
       <div class="price-row">
         ${oldPrice}
         ${discount}
       </div>
+      ${promoInfo}
       <div class="card-status">
         <span class="fire">🔥</span>
         <span>${status}</span>
@@ -86,6 +117,30 @@ function buildPromoCard(product) {
 function buildNormalCard(product) {
   const status = product.statusText || "Vừa mở bán";
   const oldPrice = product.oldPrice ? `<span class="card-old">${formatPrice(product.oldPrice).replace(" đ", "đ")}</span>` : "";
+  const discount = product.discountPercent ? `<span class="card-discount">-${product.discountPercent}%</span>` : "";
+
+  // Promo remaining info (same logic as promo cards)
+  let promoInfo = "";
+  if (product.promoQuantity && product.promoQuantity > 0) {
+    if (product.promoAvailable) {
+      const percent = Math.round((product.promoSold / product.promoQuantity) * 100);
+      promoInfo = `
+        <div class="promo-remaining">
+          <div class="promo-bar">
+            <div class="promo-bar-fill" style="width: ${percent}%"></div>
+          </div>
+          <span class="promo-text">Đã bán ${product.promoSold || 0}/${product.promoQuantity}</span>
+        </div>`;
+    } else {
+      promoInfo = `
+        <div class="promo-remaining">
+          <div class="promo-bar">
+            <div class="promo-bar-fill" style="width: 100%"></div>
+          </div>
+          <span class="promo-text promo-sold-out">Đã bán ${product.promoSold || 0}/${product.promoQuantity} — Hết KM</span>
+        </div>`;
+    }
+  }
 
   return `
     <article class="normal-card" data-id="${product.id}">
@@ -93,7 +148,11 @@ function buildNormalCard(product) {
         <div class="normal-info">
           <h3 class="card-name">${product.name}</h3>
           <div class="card-price">${formatPrice(product.price).replace(" đ", "đ")}</div>
-          ${oldPrice}
+          <div class="price-row">
+            ${oldPrice}
+            ${discount}
+          </div>
+          ${promoInfo}
         </div>
         <div class="normal-image">
           <img src="${product.image || FALLBACK_PRODUCT_IMAGE}" alt="${product.name}">
@@ -116,6 +175,52 @@ async function loadProducts() {
   return response.json();
 }
 
+const PROMO_PAGE_SIZE = 5;
+let allPromoProducts = [];
+let promoCurrentPage = 0;
+
+function renderPromoPage() {
+  if (!promoProductGrid) return;
+  const start = promoCurrentPage * PROMO_PAGE_SIZE;
+  const pageItems = allPromoProducts.slice(start, start + PROMO_PAGE_SIZE);
+  promoProductGrid.innerHTML = pageItems.map(buildPromoCard).join("");
+
+  const prevBtn = document.getElementById("promoPrev");
+  const nextBtn = document.getElementById("promoNext");
+  const totalPages = Math.ceil(allPromoProducts.length / PROMO_PAGE_SIZE);
+  if (prevBtn) prevBtn.disabled = promoCurrentPage <= 0;
+  if (nextBtn) nextBtn.disabled = promoCurrentPage >= totalPages - 1;
+
+  const indicator = document.getElementById("promoPageIndicator");
+  if (indicator && totalPages > 1) {
+    indicator.textContent = `Trang ${promoCurrentPage + 1} / ${totalPages} (${allPromoProducts.length} sản phẩm KM)`;
+  } else if (indicator) {
+    indicator.textContent = `${allPromoProducts.length} sản phẩm khuyến mãi`;
+  }
+}
+
+(function initPromoNav() {
+  const prevBtn = document.getElementById("promoPrev");
+  const nextBtn = document.getElementById("promoNext");
+  if (prevBtn) {
+    prevBtn.addEventListener("click", function () {
+      if (promoCurrentPage > 0) {
+        promoCurrentPage--;
+        renderPromoPage();
+      }
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener("click", function () {
+      const totalPages = Math.ceil(allPromoProducts.length / PROMO_PAGE_SIZE);
+      if (promoCurrentPage < totalPages - 1) {
+        promoCurrentPage++;
+        renderPromoPage();
+      }
+    });
+  }
+})();
+
 async function renderHomepageProducts() {
   if (!promoProductGrid || !normalProductGrid) {
     return;
@@ -123,11 +228,12 @@ async function renderHomepageProducts() {
 
   try {
     const products = await loadProducts();
-    const promoProducts = products.filter((product) => product.promo);
+    allPromoProducts = products.filter((product) => product.promo);
     const normalProducts = products.filter((product) => !product.promo);
 
-    if (promoProducts.length > 0) {
-      promoProductGrid.innerHTML = promoProducts.map(buildPromoCard).join("");
+    if (allPromoProducts.length > 0) {
+      promoCurrentPage = 0;
+      renderPromoPage();
     }
 
     if (normalProducts.length > 0) {

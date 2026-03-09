@@ -26,14 +26,34 @@ public class CartService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại: " + productId));
 
+        int currentInCart = 0;
         for (CartItem item : cartItems) {
             if (item.getProduct().getId().equals(productId)) {
-                item.setQuantity(item.getQuantity() + quantity);
+                currentInCart = item.getQuantity();
+                break;
+            }
+        }
+
+        int maxAllowed = quantity;
+        if (product.isPromo() && product.getPromoQuantity() != null && product.getPromoQuantity() > 0) {
+            int remaining = product.getPromoRemaining();
+            if (remaining > 0) {
+                maxAllowed = Math.min(quantity, remaining - currentInCart);
+                if (maxAllowed <= 0) {
+                    return;
+                }
+            }
+            // remaining == 0: promo sold out, sell at original price with no limit
+        }
+
+        for (CartItem item : cartItems) {
+            if (item.getProduct().getId().equals(productId)) {
+                item.setQuantity(item.getQuantity() + maxAllowed);
                 return;
             }
         }
 
-        cartItems.add(new CartItem(product, quantity));
+        cartItems.add(new CartItem(product, maxAllowed));
     }
 
     public void updateQuantity(Long productId, int quantity) {
@@ -44,13 +64,25 @@ public class CartService {
 
         for (CartItem item : cartItems) {
             if (item.getProduct().getId().equals(productId)) {
-                item.setQuantity(quantity);
+                Product product = item.getProduct();
+                if (product.isPromo() && product.getPromoQuantity() != null && product.getPromoQuantity() > 0) {
+                    int remaining = product.getPromoRemaining();
+                    if (remaining > 0) {
+                        quantity = Math.min(quantity, remaining);
+                    }
+                    // remaining == 0: promo sold out, no limit
+                }
+                item.setQuantity(Math.max(1, quantity));
                 return;
             }
         }
     }
 
     public List<CartItem> getCartItems() {
+        // Refresh products from DB to get latest promo data
+        for (CartItem item : cartItems) {
+            productRepository.findById(item.getProduct().getId()).ifPresent(item::setProduct);
+        }
         return cartItems;
     }
 
@@ -76,5 +108,20 @@ public class CartService {
 
     public String getTotalFormatted() {
         return java.text.NumberFormat.getInstance().format(getTotal());
+    }
+
+    public double getShippingFee() {
+        double total = getTotal();
+        int itemCount = getItemCount();
+        if (total >= 1000000 && itemCount >= 2) {
+            return 0;
+        }
+        return 30000;
+    }
+
+    public String getShippingFeeFormatted() {
+        double fee = getShippingFee();
+        if (fee == 0) return "Miễn phí";
+        return java.text.NumberFormat.getInstance().format(fee) + "₫";
     }
 }

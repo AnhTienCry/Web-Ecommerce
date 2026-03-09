@@ -39,6 +39,8 @@ public class ProductService {
         existingProduct.setBadge(product.getBadge());
         existingProduct.setStatusText(product.getStatusText());
         existingProduct.setPromo(product.isPromo());
+        existingProduct.setPromoQuantity(product.getPromoQuantity());
+        existingProduct.setPromoSold(product.getPromoSold());
         existingProduct.setDescription(product.getDescription());
         existingProduct.setImageUrl(product.getImageUrl());
         existingProduct.setCategory(product.getCategory());

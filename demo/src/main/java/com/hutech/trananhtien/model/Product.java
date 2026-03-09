@@ -48,6 +48,12 @@ public class Product {
 
     private boolean promo;
 
+    @Column(name = "promo_quantity")
+    private Integer promoQuantity;
+
+    @Column(name = "promo_sold")
+    private Integer promoSold = 0;
+
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String description;
 
@@ -67,5 +73,25 @@ public class Product {
             return null;
         }
         return java.text.NumberFormat.getInstance().format(oldPrice);
+    }
+
+    public int getPromoRemaining() {
+        if (promoQuantity == null || promoQuantity <= 0) return 0;
+        return Math.max(0, promoQuantity - (promoSold == null ? 0 : promoSold));
+    }
+
+    public boolean isPromoAvailable() {
+        return promo && promoQuantity != null && promoQuantity > 0 && getPromoRemaining() > 0;
+    }
+
+    public double getEffectivePrice() {
+        if (isPromoAvailable()) {
+            return price;
+        }
+        return (oldPrice != null && promo) ? oldPrice : price;
+    }
+
+    public String getEffectivePriceDisplay() {
+        return java.text.NumberFormat.getInstance().format(getEffectivePrice());
     }
 }

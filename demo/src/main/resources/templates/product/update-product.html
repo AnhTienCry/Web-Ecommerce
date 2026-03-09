@@ -170,6 +170,18 @@
                     </div>
                   </div>
 
+                  <div class="form-group">
+                    <label class="form-label">Số lượng khuyến mãi</label>
+                    <input th:field="*{promoQuantity}" type="number" min="0" class="form-input" placeholder="VD: 20" />
+                    <small style="color:#6b7280;font-size:12px">Tổng suất KM (để trống nếu không giới hạn)</small>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Đã bán KM</label>
+                    <input th:field="*{promoSold}" type="number" min="0" class="form-input" placeholder="0" />
+                    <small style="color:#6b7280;font-size:12px">Số suất KM đã bán</small>
+                  </div>
+
                   <div class="form-group full">
                     <label class="form-label">Mô tả chi tiết</label>
                     <textarea th:field="*{description}" class="form-textarea"></textarea>

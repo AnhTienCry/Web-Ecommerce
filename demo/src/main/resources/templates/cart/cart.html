@@ -238,8 +238,9 @@
               <div class="item-info">
                 <h4 th:text="${item.product.name}">Tên sản phẩm</h4>
                 <div style="margin-bottom: 12px">
-                  <span class="item-price" th:text="${item.product.priceDisplay + '₫'}">0₫</span>
-                  <span class="item-old-price" th:if="${item.product.oldPrice != null}" th:text="${item.product.oldPriceDisplay + '₫'}">0₫</span>
+                  <span class="item-price" th:text="${item.product.effectivePriceDisplay + '₫'}">0₫</span>
+                  <span class="item-old-price" th:if="${item.product.promo and !item.product.promoAvailable}" th:text="${item.product.priceDisplay + '₫'}">0₫</span>
+                  <span class="item-old-price" th:if="${item.product.promo and item.product.promoAvailable and item.product.oldPrice != null}" th:text="${item.product.oldPriceDisplay + '₫'}">0₫</span>
                 </div>
                 <form th:action="@{/cart/update}" method="post" class="quantity-control">
                   <input type="hidden" name="productId" th:value="${item.product.id}" />
@@ -259,8 +260,8 @@
           <div class="cart-summary">
             <h3>Tóm tắt đơn hàng</h3>
             <div class="summary-row"><span>Tạm tính</span><span th:text="${totalFormatted + '₫'}">0₫</span></div>
-            <div class="summary-row"><span>Điểm dự kiến</span><span th:text="${earnedPoints + ' điểm'}">0 điểm</span></div>
-            <div class="summary-row"><span>Phí vận chuyển</span><span>Miễn phí</span></div>
+            <div class="summary-row" style="color:#059669"><span>🎁 Điểm nhận sau đơn hàng</span><span th:text="${earnedPoints + ' điểm'}">0 điểm</span></div>
+            <div class="summary-row"><span>Phí vận chuyển</span><span th:text="${shippingFeeFormatted}">Miễn phí</span></div>
             <div class="summary-row total"><span>Tổng cộng</span><span class="amount" th:text="${totalFormatted + '₫'}">0₫</span></div>
 
             <a th:href="@{/order/checkout}" class="checkout-btn">Tiến hành đặt hàng</a>

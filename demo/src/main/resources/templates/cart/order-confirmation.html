@@ -246,9 +246,12 @@
               <div class="info-section-title">💳 Thanh toán và ưu đãi</div>
               <div class="info-card">
                 <div class="info-row"><span class="label">Tổng trước giảm</span><span class="value" th:text="${order.totalFormatted} + '₫'">0₫</span></div>
+                <div class="info-row"><span class="label">Phí vận chuyển</span><span class="value" th:text="${order.shippingFee == 0 ? 'Miễn phí' : order.shippingFeeFormatted + '₫'}">Miễn phí</span></div>
                 <div class="info-row" th:if="${order.pointsUsed != null and order.pointsUsed > 0}"><span class="label">Điểm đã dùng</span><span class="value" th:text="${order.pointsUsed} + ' điểm'">0 điểm</span></div>
                 <div class="info-row" th:if="${order.discountAmount > 0}"><span class="label">Giảm giá</span><span class="value" th:text="${'-' + order.discountFormatted + '₫'}">0₫</span></div>
                 <div class="info-row"><span class="label">Điểm tích lũy</span><span class="value" th:text="${'+' + order.pointsEarned + ' điểm'}">+0 điểm</span></div>
+                <div class="info-row"><span class="label">Phương thức TT</span><span class="value" th:text="${order.paymentMethod == 'VNPAY' ? 'VNPay' : 'Thanh toán khi nhận hàng (COD)'}">COD</span></div>
+                <div class="info-row"><span class="label">Trạng thái TT</span><span class="value" th:text="${order.paymentStatus == 'PAID' ? '✅ Đã thanh toán' : (order.paymentStatus == 'FAILED' ? '❌ Thất bại' : '⏳ Chờ thanh toán')}">Chờ</span></div>
               </div>
             </div>
 

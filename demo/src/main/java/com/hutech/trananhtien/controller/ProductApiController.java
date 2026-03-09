@@ -33,7 +33,12 @@ public class ProductApiController {
             String statusText,
             boolean promo,
             Long categoryId,
-            String categoryName) {
+            String categoryName,
+            Integer promoQuantity,
+            Integer promoSold,
+            int promoRemaining,
+            double effectivePrice,
+            boolean promoAvailable) {
         public static ProductDto from(Product product) {
             return new ProductDto(
                     product.getId(),
@@ -46,7 +51,12 @@ public class ProductApiController {
                     product.getStatusText(),
                     product.isPromo(),
                     product.getCategory() != null ? product.getCategory().getId() : null,
-                    product.getCategory() != null ? product.getCategory().getName() : null);
+                    product.getCategory() != null ? product.getCategory().getName() : null,
+                    product.getPromoQuantity(),
+                    product.getPromoSold(),
+                    product.getPromoRemaining(),
+                    product.getEffectivePrice(),
+                    product.isPromoAvailable());
         }
     }
 }
