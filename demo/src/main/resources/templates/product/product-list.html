@@ -1,146 +1,229 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
-<body>
-<div layout:fragment="content">
-
-    <!-- Page Header -->
-    <div class="page-header d-flex justify-content-between align-items-center">
-        <h4><i class="bi bi-box-seam"></i> Danh sách sản phẩm</h4>
-        <a href="/products/new" class="btn btn-add">
-            <i class="bi bi-plus-circle"></i> Thêm sản phẩm
-        </a>
-    </div>
-
-    <!-- Products Table -->
-    <div class="product-table">
-        <table class="table mb-0">
-            <thead>
-            <tr>
-                <th style="width: 5%">#</th>
-                <th style="width: 12%">Ảnh</th>
-                <th style="width: 20%">Tên sản phẩm</th>
-                <th style="width: 20%">Mô tả</th>
-                <th style="width: 13%">Danh mục</th>
-                <th style="width: 12%">Giá</th>
-                <th style="width: 18%" class="text-center">Thao tác</th>
-            </tr>
-            </thead>
-            <tbody>
-            <!-- Empty State -->
-            <tr th:if="${#lists.isEmpty(products)}">
-                <td colspan="7" class="text-center py-5">
-                    <i class="bi bi-inbox" style="font-size: 48px; color: #ccc;"></i>
-                    <p class="text-muted mt-3 mb-0">Chưa có sản phẩm nào</p>
-                    <a href="/products/new" class="btn btn-add mt-3">
-                        <i class="bi bi-plus-circle"></i> Thêm sản phẩm đầu tiên
-                    </a>
-                </td>
-            </tr>
-
-            <!-- Product Rows -->
-            <tr th:each="product, iterStat : ${products}">
-                <td class="fw-bold" th:text="${iterStat.count}">1</td>
-                <td>
-                    <!-- Hiển thị ảnh sản phẩm -->
-                    <img th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
-                         th:src="${product.imageUrl}"
-                         class="product-image"
-                         alt="Ảnh sản phẩm">
-                    <img th:unless="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
-                         src="https://via.placeholder.com/80x80?text=No+Image"
-                         class="product-image"
-                         alt="No image">
-                </td>
-                <td>
-                    <strong th:text="${product.name}">Tên sản phẩm</strong>
-                </td>
-                <td>
-                    <span class="text-muted" 
-                          th:text="${product.description != null and #strings.length(product.description) > 40 ? #strings.substring(product.description, 0, 40) + '...' : (product.description ?: 'Không có mô tả')}">
-                        Mô tả
-                    </span>
-                </td>
-                <td>
-                    <span class="category-badge" 
-                          th:text="${product.category != null ? product.category.name : 'Chưa phân loại'}">
-                        Danh mục
-                    </span>
-                </td>
-                <td>
-                    <span class="price-text" 
-                          th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">
-                        0 VNĐ
-                    </span>
-                </td>
-                <td class="text-center">
-                    <a th:href="@{/products/edit/{id}(id=${product.id})}" 
-                       class="btn btn-edit btn-sm me-1">
-                        <i class="bi bi-pencil-square"></i> Sửa
-                    </a>
-                    <a th:href="@{/products/delete/{id}(id=${product.id})}" 
-                       class="btn btn-delete btn-sm me-1"
-                       onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?')">
-                        <i class="bi bi-trash"></i> Xóa
-                    </a>
-                    <button class="btn btn-cart btn-sm">
-                        <i class="bi bi-cart-plus"></i> Thêm vào giỏ
-                    </button>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Statistics -->
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="page-header text-center">
-                <h5 class="text-primary mb-0" th:text="${#lists.size(products)}">0</h5>
-                <small class="text-muted">Tổng sản phẩm</small>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="page-header text-center">
-                <h5 class="text-success mb-0">5</h5>
-                <small class="text-muted">Danh mục</small>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="page-header text-center">
-                <h5 class="text-warning mb-0">0</h5>
-                <small class="text-muted">Đơn hàng</small>
-            </div>
-        </div>
-    </div>
-
-</div>
-</body>
-</html>
-                <h3 class="fw-bold mb-0">125</h3>
-                <p class="mb-0 opacity-75">Lượt Xem</p>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<script layout:fragment="scripts">
-    // Tìm kiếm sản phẩm
-    document.getElementById('searchInput').addEventListener('keyup', function() {
-        let filter = this.value.toLowerCase();
-        let rows = document.querySelectorAll('.product-row');
-        
-        rows.forEach(row => {
-            let name = row.querySelector('.fw-bold').textContent.toLowerCase();
-            if (name.includes(filter)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+<!doctype html>
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layout}"
+>
+    <head>
+        <title>Quản lý Sản phẩm</title>
+        <style>
+            .product-admin-section {
+                padding: 24px 0 40px;
             }
-        });
-    });
-</script>
-</body>
+            .admin-header {
+                background: linear-gradient(135deg, #ffd400, #f3c400);
+                padding: 20px 24px;
+                border-radius: 14px 14px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .admin-header h3 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 700;
+                color: #000;
+            }
+            .admin-body {
+                background: #fff;
+                border-radius: 0 0 14px 14px;
+                padding: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            }
+            .toolbar-row {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 18px;
+                flex-wrap: wrap;
+            }
+            .toolbar-form {
+                display: flex;
+                gap: 8px;
+                flex: 1;
+            }
+            .toolbar-form input,
+            .toolbar-form select {
+                flex: 1;
+                padding: 10px 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 10px;
+            }
+            .product-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .product-table th,
+            .product-table td {
+                padding: 14px 12px;
+                border-bottom: 1px solid #ececec;
+                vertical-align: middle;
+            }
+            .product-table th {
+                background: #f9fafb;
+                font-size: 13px;
+                font-weight: 700;
+                color: #4b5563;
+            }
+            .btn-action,
+            .btn-add-new,
+            .btn-back,
+            .filter-btn {
+                padding: 10px 16px;
+                border-radius: 999px;
+                font-weight: 600;
+                font-size: 13px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                border: none;
+            }
+            .btn-add-new,
+            .filter-btn {
+                background: #000;
+                color: #fff;
+                cursor: pointer;
+            }
+            .btn-back {
+                background: #f0f0f0;
+                color: #333;
+            }
+            .btn-action {
+                background: #eff6ff;
+                color: #1d4ed8;
+                margin: 0 4px 4px 0;
+            }
+            .btn-edit {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+            .btn-delete {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+            .table-thumb {
+                width: 56px;
+                height: 56px;
+                object-fit: contain;
+                background: #f9fafb;
+                border-radius: 8px;
+                padding: 4px;
+            }
+            .empty-state {
+                text-align: center;
+                padding: 40px;
+                color: #999;
+            }
+            @media (max-width: 900px) {
+                .admin-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 12px;
+                }
+                .product-table {
+                    display: block;
+                    overflow-x: auto;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <section layout:fragment="content">
+            <section class="product-admin-section">
+                <div class="container">
+                    <div class="admin-header">
+                        <h3>📦 Quản lý sản phẩm</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+                            <a th:href="@{/}" class="btn-back">← Trang chủ</a>
+                            <a th:href="@{/products/add}" class="btn-add-new">+ Thêm sản phẩm mới</a>
+                        </div>
+                    </div>
+                    <div class="admin-body">
+                        <div class="toolbar-row">
+                            <form th:action="@{/products}" method="get" class="toolbar-form">
+                                <input type="text" name="q" placeholder="Tìm theo tên sản phẩm" th:value="${keyword}" />
+                                <button type="submit" class="filter-btn">Tìm kiếm</button>
+                            </form>
+                            <form th:action="@{/products}" method="get" class="toolbar-form" style="max-width: 380px">
+                                <select name="category">
+                                    <option value="">Tất cả danh mục</option>
+                                    <option
+                                        th:each="categoryOption : ${categories}"
+                                        th:value="${categoryOption.id}"
+                                        th:text="${categoryOption.name}"
+                                        th:selected="${selectedCategory != null and selectedCategory == categoryOption.id}"
+                                    >Danh mục</option>
+                                </select>
+                                <button type="submit" class="filter-btn">Lọc</button>
+                            </form>
+                        </div>
+                        <table class="product-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px; text-align: center">ID</th>
+                                    <th style="width: 80px">Ảnh</th>
+                                    <th>Tên sản phẩm</th>
+                                    <th style="width: 140px; text-align: right">Giá</th>
+                                    <th style="width: 120px">Danh mục</th>
+                                    <th style="width: 80px; text-align: center">Promo</th>
+                                    <th style="width: 160px; text-align: center">Hành động</th>
+                                    <th style="width: 180px; text-align: center">Thêm giỏ hàng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="prod : ${products}">
+                                    <td style="text-align: center" th:text="${prod.id}">1</td>
+                                    <td>
+                                        <img
+                                            th:src="${prod.imageUrl != null and !prod.imageUrl.isBlank() ? prod.imageUrl : '/images/product-fallback.svg'}"
+                                            th:alt="${prod.name}"
+                                            class="table-thumb"
+                                        />
+                                    </td>
+                                    <td>
+                                        <strong th:text="${prod.name}">Tên sản phẩm</strong>
+                                        <div style="margin-top: 6px; color: #6b7280; font-size: 13px" th:text="${prod.description}">Mô tả</div>
+                                    </td>
+                                    <td style="text-align: right">
+                                        <strong th:text="${prod.priceDisplay + ' đ'}">0 đ</strong>
+                                        <div th:if="${prod.oldPrice != null}" style="margin-top: 6px; color: #9ca3af; text-decoration: line-through; font-size: 13px" th:text="${prod.oldPriceDisplay + ' đ'}">0 đ</div>
+                                    </td>
+                                    <td th:text="${prod.category != null ? prod.category.name : 'Chưa phân loại'}">Danh mục</td>
+                                    <td style="text-align: center">
+                                        <span th:text="${prod.promo ? '🔥 Có' : 'Không'}">Không</span>
+                                    </td>
+                                    <td style="text-align: center">
+                                        <a th:href="@{/products/edit/{id}(id=${prod.id})}" class="btn-action btn-edit">✏️ Sửa</a>
+                                        <a
+                                            th:href="@{/products/delete/{id}(id=${prod.id})}"
+                                            class="btn-action btn-delete"
+                                            onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');"
+                                        >🗑️ Xóa</a>
+                                    </td>
+                                    <td style="text-align: center">
+                                        <form
+                                            th:action="@{/cart/add}"
+                                            method="post"
+                                            style="display: inline-flex; align-items: center; gap: 8px"
+                                        >
+                                            <input type="number" name="quantity" min="1" value="1" style="width: 60px; padding: 6px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center" />
+                                            <input type="hidden" th:value="${prod.id}" name="productId" />
+                                            <input type="hidden" th:value="@{/products}" name="redirect" />
+                                            <button type="submit" class="btn-action" style="background: #fef3c7; color: #92400e; white-space: nowrap">
+                                                🛒 Thêm
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr th:if="${products == null or products.empty}">
+                                    <td colspan="8" class="empty-state">Chưa có sản phẩm nào</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </body>
 </html>

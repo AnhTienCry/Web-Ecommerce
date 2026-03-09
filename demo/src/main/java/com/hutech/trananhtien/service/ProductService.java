@@ -1,28 +1,70 @@
 package com.hutech.trananhtien.service;
+
 import com.hutech.trananhtien.model.Product;
 import com.hutech.trananhtien.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service // Bắt buộc phải có để fix lỗi 'No beans of type found'
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional
 public class ProductService {
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
-    public void saveProduct(Product product) {
-        productRepository.save(product);
+    public Optional<Product> getProductById(Long id) {
+        return productRepository.findById(id);
     }
 
-    public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
+    public Product addProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    public Product updateProduct(@NotNull Product product) {
+        Product existingProduct = productRepository.findById(product.getId())
+                .orElseThrow(() -> new IllegalStateException("Product with ID " + product.getId() + " does not exist."));
+
+        existingProduct.setName(product.getName());
+        existingProduct.setPrice(product.getPrice());
+        existingProduct.setOldPrice(product.getOldPrice());
+        existingProduct.setDiscountPercent(product.getDiscountPercent());
+        existingProduct.setBadge(product.getBadge());
+        existingProduct.setStatusText(product.getStatusText());
+        existingProduct.setPromo(product.isPromo());
+        existingProduct.setDescription(product.getDescription());
+        existingProduct.setImageUrl(product.getImageUrl());
+        existingProduct.setCategory(product.getCategory());
+        return productRepository.save(existingProduct);
     }
 
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+
+    public List<Product> getPromoProducts() {
+        return productRepository.findByPromoTrue();
+    }
+
+    public List<Product> getNormalProducts() {
+        return productRepository.findByPromoFalse();
+    }
+
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategoryId(categoryId);
+    }
+
+    public List<Product> searchProducts(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return getAllProducts();
+        }
+        return productRepository.findByNameContainingIgnoreCase(keyword.trim());
     }
 }

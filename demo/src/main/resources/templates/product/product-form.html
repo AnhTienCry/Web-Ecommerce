@@ -141,8 +141,8 @@
                 
                 <div class="text-center mb-3">
                     <img id="livePreviewImage" 
-                         th:src="${product.imageUrl != null and !product.imageUrl.isEmpty() ? product.imageUrl : 'https://via.placeholder.com/200x200?text=No+Image'}"
-                         src="https://via.placeholder.com/200x200?text=No+Image"
+                        th:src="${product.imageUrl != null and !product.imageUrl.isEmpty() ? product.imageUrl : '/images/product-fallback.svg'}"
+                        src="/images/product-fallback.svg"
                          class="product-image" 
                          style="width: 200px; height: 200px;"
                          alt="Preview">

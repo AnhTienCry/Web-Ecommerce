@@ -1,0 +1,60 @@
+package com.hutech.trananhtien.controller;
+
+import com.hutech.trananhtien.service.CartService;
+import com.hutech.trananhtien.service.PointService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+@RequestMapping("/cart")
+@RequiredArgsConstructor
+public class CartController {
+    private final CartService cartService;
+    private final PointService pointService;
+
+    @GetMapping
+    public String showCart(Model model) {
+        double total = cartService.getTotal();
+        model.addAttribute("cartItems", cartService.getCartItems());
+        model.addAttribute("total", total);
+        model.addAttribute("totalFormatted", cartService.getTotalFormatted());
+        model.addAttribute("itemCount", cartService.getItemCount());
+        model.addAttribute("earnedPoints", pointService.calculateEarnedPoints(total));
+        return "cart/cart";
+    }
+
+    @PostMapping("/add")
+    public String addToCart(@RequestParam Long productId,
+                            @RequestParam(defaultValue = "1") int quantity,
+                            @RequestParam(required = false) String redirect) {
+        cartService.addToCart(productId, quantity);
+        if (redirect != null && !redirect.isBlank()) {
+            return "redirect:" + redirect;
+        }
+        return "redirect:/cart";
+    }
+
+    @PostMapping("/update")
+    public String updateQuantity(@RequestParam Long productId, @RequestParam int quantity) {
+        cartService.updateQuantity(productId, quantity);
+        return "redirect:/cart";
+    }
+
+    @GetMapping("/remove/{productId}")
+    public String removeFromCart(@PathVariable Long productId) {
+        cartService.removeFromCart(productId);
+        return "redirect:/cart";
+    }
+
+    @GetMapping("/clear")
+    public String clearCart() {
+        cartService.clearCart();
+        return "redirect:/cart";
+    }
+}

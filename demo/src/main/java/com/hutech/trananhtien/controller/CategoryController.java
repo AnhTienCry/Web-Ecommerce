@@ -1,4 +1,4 @@
-package com.hutech.trananhtien.controller; // Đồng bộ với package thực tế của bạn
+package com.hutech.trananhtien.controller;
 
 import com.hutech.trananhtien.model.Category;
 import com.hutech.trananhtien.service.CategoryService;
@@ -8,41 +8,70 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
 import java.util.List;
 
 @Controller
-@RequestMapping("/categories") // Gom nhóm các đường dẫn liên quan đến category
-@RequiredArgsConstructor // Tự động tạo Constructor cho các field 'final'
+@RequestMapping("/categories")
+@RequiredArgsConstructor
 public class CategoryController {
-
-    // Sử dụng 'private final' kết hợp @RequiredArgsConstructor là chuẩn nhất hiện nay
-    // Bạn không cần thêm @Autowired ở đây nữa vì Lombok đã làm thay
     private final CategoryService categoryService;
 
-    // 1. Hiển thị danh sách danh mục
     @GetMapping
     public String listCategories(Model model) {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
-        return "categories/categories-list"; // Bỏ dấu gạch chéo đầu tiên để Thymeleaf tìm đúng thư mục
+        return "categories/categories-list";
     }
 
-    // 2. Hiển thị form thêm danh mục
     @GetMapping("/add")
     public String showAddForm(Model model) {
         model.addAttribute("category", new Category());
+        model.addAttribute("pageTitle", "Thêm danh mục mới");
+        model.addAttribute("formAction", "/categories/add");
         return "categories/add-category";
     }
 
-    // 3. Xử lý lưu danh mục mới
     @PostMapping("/add")
-    public String addCategory(@Valid Category category, BindingResult result) {
+    public String addCategory(@Valid Category category, BindingResult result, Model model) {
         if (result.hasErrors()) {
-            return "categories/add-category"; // Nếu có lỗi validation (như để trống tên) thì quay lại form
+            model.addAttribute("pageTitle", "Thêm danh mục mới");
+            model.addAttribute("formAction", "/categories/add");
+            return "categories/add-category";
         }
         categoryService.addCategory(category);
-        return "redirect:/categories"; // Lưu xong thì quay về trang danh sách
+        return "redirect:/categories";
+    }
+
+    @GetMapping("/edit/{id}")
+    public String showEditForm(@PathVariable Long id, Model model) {
+        Category category = categoryService.getCategoryById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại: " + id));
+        model.addAttribute("category", category);
+        model.addAttribute("pageTitle", "Cập nhật danh mục");
+        model.addAttribute("formAction", "/categories/update/" + id);
+        return "categories/add-category";
+    }
+
+    @PostMapping("/update/{id}")
+    public String updateCategory(@PathVariable Long id, @Valid Category category, BindingResult result, Model model) {
+        if (result.hasErrors()) {
+            category.setId(id);
+            model.addAttribute("pageTitle", "Cập nhật danh mục");
+            model.addAttribute("formAction", "/categories/update/" + id);
+            return "categories/add-category";
+        }
+        category.setId(id);
+        categoryService.updateCategory(category);
+        return "redirect:/categories";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteCategory(@PathVariable Long id) {
+        categoryService.deleteCategoryById(id);
+        return "redirect:/categories";
     }
 }
