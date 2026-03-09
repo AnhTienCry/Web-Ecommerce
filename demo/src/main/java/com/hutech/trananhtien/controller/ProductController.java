@@ -37,9 +37,9 @@ public class ProductController {
     private String uploadDir;
 
     @GetMapping
-    public String listProducts(@RequestParam(required = false) Long category,
-                               @RequestParam(required = false) String q,
-                               Model model) {
+    public String listProducts(@RequestParam(value = "category", required = false) Long category,
+            @RequestParam(value = "q", required = false) String q,
+            Model model) {
         List<Product> products;
         if (category != null) {
             products = productService.getProductsByCategory(category);
@@ -56,7 +56,7 @@ public class ProductController {
     }
 
     @GetMapping("/category/{categoryId}")
-    public String showProductsByCategory(@PathVariable Long categoryId, Model model) {
+    public String showProductsByCategory(@PathVariable("categoryId") Long categoryId, Model model) {
         Category category = categoryService.getCategoryById(categoryId)
                 .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại: " + categoryId));
         model.addAttribute("category", category);
@@ -75,9 +75,9 @@ public class ProductController {
 
     @PostMapping("/add")
     public String addProduct(@Valid Product product,
-                             BindingResult result,
-                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-                             Model model) {
+            BindingResult result,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            Model model) {
         if (result.hasErrors()) {
             model.addAttribute("categories", categoryService.getAllCategories());
             return "product/add-product";
@@ -90,7 +90,7 @@ public class ProductController {
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
+    public String showEditForm(@PathVariable("id") Long id, Model model) {
         Product product = productService.getProductById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại: " + id));
         if (product.getCategory() == null) {
@@ -102,11 +102,11 @@ public class ProductController {
     }
 
     @PostMapping("/update/{id}")
-    public String updateProduct(@PathVariable Long id,
-                                @Valid Product product,
-                                BindingResult result,
-                                @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
-                                Model model) {
+    public String updateProduct(@PathVariable("id") Long id,
+            @Valid Product product,
+            BindingResult result,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+            Model model) {
         Product existingProduct = productService.getProductById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Sản phẩm không tồn tại: " + id));
 
@@ -124,7 +124,7 @@ public class ProductController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteProduct(@PathVariable Long id) {
+    public String deleteProduct(@PathVariable("id") Long id) {
         productService.deleteProduct(id);
         return "redirect:/products";
     }

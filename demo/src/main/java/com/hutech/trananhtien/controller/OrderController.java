@@ -28,7 +28,7 @@ public class OrderController {
     private final PointService pointService;
 
     @GetMapping("/checkout")
-    public String checkout(@RequestParam(required = false) String phone, Model model) {
+    public String checkout(@RequestParam(value = "phone", required = false) String phone, Model model) {
         List<CartItem> cartItems = cartService.getCartItems();
         if (cartItems.isEmpty()) {
             return "redirect:/cart";
@@ -53,8 +53,8 @@ public class OrderController {
 
     @PostMapping("/submit")
     public String submitOrder(@ModelAttribute Order order,
-                              @RequestParam(defaultValue = "0") int pointsToUse,
-                              RedirectAttributes redirectAttributes) {
+            @RequestParam(value = "pointsToUse", defaultValue = "0") int pointsToUse,
+            RedirectAttributes redirectAttributes) {
         List<CartItem> cartItems = cartService.getCartItems();
         if (cartItems.isEmpty()) {
             return "redirect:/cart";
@@ -66,7 +66,7 @@ public class OrderController {
     }
 
     @GetMapping("/confirmation")
-    public String orderConfirmation(@RequestParam Long orderId, Model model) {
+    public String orderConfirmation(@RequestParam("orderId") Long orderId, Model model) {
         Order order = orderService.getOrderById(orderId).orElse(null);
         if (order == null) {
             return "redirect:/";
@@ -77,12 +77,13 @@ public class OrderController {
 
     @GetMapping("/api/points")
     @ResponseBody
-    public CustomerPointsResponse getPointsByPhone(@RequestParam String phone) {
+    public CustomerPointsResponse getPointsByPhone(@RequestParam("phone") String phone) {
         Customer customer = pointService.getCustomerByPhone(phone);
         if (customer == null) {
             return new CustomerPointsResponse(false, "", 0, "", "");
         }
-        return new CustomerPointsResponse(true, customer.getName(), customer.getPoints(), customer.getEmail(), customer.getAddress());
+        return new CustomerPointsResponse(true, customer.getName(), customer.getPoints(), customer.getEmail(),
+                customer.getAddress());
     }
 
     public record CustomerPointsResponse(boolean found, String name, int points, String email, String address) {

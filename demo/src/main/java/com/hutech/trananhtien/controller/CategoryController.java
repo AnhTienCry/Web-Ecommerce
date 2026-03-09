@@ -47,7 +47,7 @@ public class CategoryController {
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Long id, Model model) {
+    public String showEditForm(@PathVariable("id") Long id, Model model) {
         Category category = categoryService.getCategoryById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Danh mục không tồn tại: " + id));
         model.addAttribute("category", category);
@@ -57,7 +57,8 @@ public class CategoryController {
     }
 
     @PostMapping("/update/{id}")
-    public String updateCategory(@PathVariable Long id, @Valid Category category, BindingResult result, Model model) {
+    public String updateCategory(@PathVariable("id") Long id, @Valid Category category, BindingResult result,
+            Model model) {
         if (result.hasErrors()) {
             category.setId(id);
             model.addAttribute("pageTitle", "Cập nhật danh mục");
@@ -70,7 +71,7 @@ public class CategoryController {
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteCategory(@PathVariable Long id) {
+    public String deleteCategory(@PathVariable("id") Long id) {
         categoryService.deleteCategoryById(id);
         return "redirect:/categories";
     }
